@@ -1,0 +1,55 @@
+name: CI Checks
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  frontend-build:
+    name: Build Frontend (Vue 3)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: shop_vue/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd shop_vue
+          npm install --legacy-peer-deps
+
+      - name: Build production bundle
+        run: |
+          cd shop_vue
+          npm run build
+
+  backend-check:
+    name: Check Backend (Laravel)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+          extensions: mbstring, pdo, pdo_mysql, bcmath, gd, zip
+
+      - name: Validate composer.json
+        run: |
+          cd shop_new
+          composer validate --strict
+
+      - name: Install dependencies
+        run: |
+          cd shop_new
+          composer install --prefer-dist --no-progress
